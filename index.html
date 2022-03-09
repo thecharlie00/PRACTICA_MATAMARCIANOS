@@ -14,11 +14,14 @@
 
 <script type="text/javascript">
 
-// configuracion del motor del juego
-var config = {
+let game_w = 800;
+let game_h = 600;
+let enemySpeed = 1;
+
+let config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: game_w,
+    height: game_h,
     physics: {
         default: 'arcade',
         arcade: {
@@ -33,15 +36,21 @@ var config = {
     }
 };
 
-var player;
-var cursors;
-var lives = 3;
-var score = 0;
-var gameOver = false;
-var scoreText;
-var game = new Phaser.Game(config);
-var laser = 0;
-var aliens;
+
+let player;
+let cursors;
+let lives = 3;
+let score = 0;
+let gameOver = false;
+let scoreText;
+let game = new Phaser.Game(config);
+let laser;
+let alien;
+let alien_2;
+let alien_3;
+let alien_4;
+
+
 
 
 function preload ()
@@ -57,50 +66,88 @@ function create ()
 {
     
     this.add.image(400, 300, 'Sky');
+    
+	alien = this.add.image(890, 150, "Marciano");
+	alien_2 = this.add.image(1850, 300, "Marciano");
+	alien_3 = this.add.image(1350, 450, "Marciano");
+	alien_4 = this.add.image(2000, 600, "Marciano");
 
-   
-    player = this.physics.add.sprite(50, 50, 'Nave');
-    player.setBounce(0.2);
-    player.setCollideWorldBounds(true);
-    player.allowGravity = false;
+	laser = this.add.image(65,60, "Bullet");
 
+	player = this.add.image(60, 60, "Nave");
+
+	this.physics.add.existing(alien, false);
+	this.physics.add.existing(alien_2, false);
+	this.physics.add.existing(alien_3, false);
+  // this.physics.add.exiting(alien_4, false);
+
+	this.physics.add.existing(player, false);
+	this.physics.add.existing(laser, false);	
+
+    
+	let aliens = [alien,alien_2,alien_3,alien_4];
+    
+	for(let i = 0;  i < aliens.length; i++){
+		
+		this.physics.add.collider(player, aliens[i], function(player, aliens){
+			lives--;
+			lives_text.text = lives.toString();
+		
+		});
+
+	}
+
+    this.add.text(game_w/2 - 350, 54, "Lives:  ");
+	lives_text = this.add.text(game_w/2 - 350+64, 54, "3");
+	this.add.text(game_w/2 - 350, 70, "Points:  ");
+	score_text = this.add.text(game_w/2 - 350+68, 70, "0");
+	
     
     cursors = this.input.keyboard.createCursorKeys();
 
     
-    scoreText = this.add.text(16, 16, 'score: 0 lives: 3',{ fontSize: '32px', fill: 'white' });
-    aliens = this.physics.add.group();
-
-      
-    var alien = aliens.create(10000 ,30, 'Marciano');
-    alien.setBounce(0.2);
-    alien.setCollideWorldBounds(true);
-    alien.setVelocityX(500);
-    alien.allowGravity = false;
+    
 
     
 }
 
 
 
-function update ()
+function update (time, delta)
 {
     if (gameOver)
     {
         return;
     }
 
-    if (cursors.up.isDown)
+    if (cursors.up.isDown && player.y > game_h  - 560)
     {
-        player.setVelocityY(-330);
-    }
-    else if (cursors.down.isDown)
-    {
-        player.setVelocityY(330);
-    }
+        player.y -= 25;
+		laser.y -= 25;
 
 
+    }
+    else if (cursors.down.isDown && player.y < game_h  - 40)
+    {
+        player.y += 25;
+		laser.y += 25;
+    }
+
+	let speedBullet = 1;
+
+	laser.x += speedBullet * delta;
+
+	if(cursors.right.isDown){
+		laser.x = 20;
+	}
+				
+	alien.x -= 5;
+	alien_2.x -= 5;
+	alien_3.x -= 5;
+
+	
     
+
 
 }
 
