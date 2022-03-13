@@ -17,6 +17,7 @@
 let game_w = 800;
 let game_h = 600;
 let enemySpeed = 1;
+let bulletSpeed;
 
 let config = {
     type: Phaser.AUTO,
@@ -44,13 +45,16 @@ let score = 0;
 let gameOver = false;
 let scoreText;
 let game = new Phaser.Game(config);
+let lasers;
 let laser;
 let alien;
 let alien_2;
 let alien_3;
 let alien_4;
-
-
+let leaserTime=0;
+let numberOfLasers = 0;
+let bulletTime = 0;
+let timer;
 
 
 function preload ()
@@ -64,57 +68,56 @@ function preload ()
 
 function create ()
 {
-    
     this.add.image(400, 300, 'Sky');
+	this.createTimer;
     
-	alien = this.add.image(890, 150, "Marciano");
-	alien_2 = this.add.image(1850, 300, "Marciano");
-	alien_3 = this.add.image(1350, 450, "Marciano");
-	alien_4 = this.add.image(2000, 600, "Marciano");
+	alien = this.add.image(900, 150, "Marciano");
+	alien_2 = this.add.image(2000, 300, "Marciano");
+	alien_3 = this.add.image(2200, 450, "Marciano");
+	//laser = this.add.image(65,60,"Bullet");
 
-	laser = this.add.image(65,60, "Bullet");
+	
 
 	player = this.add.image(60, 60, "Nave");
 
 	this.physics.add.existing(alien, false);
 	this.physics.add.existing(alien_2, false);
 	this.physics.add.existing(alien_3, false);
-  // this.physics.add.exiting(alien_4, false);
+    
 
 	this.physics.add.existing(player, false);
-	this.physics.add.existing(laser, false);	
-
     
-	let aliens = [alien,alien_2,alien_3,alien_4];
+    aliens = [alien,alien_2,alien_3];
+	lasers = this.physics.add.group();
     
 	for(let i = 0;  i < aliens.length; i++){
 		
 		this.physics.add.collider(player, aliens[i], function(player, aliens){
 			lives--;
 			lives_text.text = lives.toString();
-		
+			reset_player();
+			reset_enemies();
 		});
-
+		
+		this.physics.add.collider(lasers,aliens[i],hitAlien, null, this);
+		this.physics.add.collider(aliens[i],laser,destroyLaser, null, this);
 	}
 
-    this.add.text(game_w/2 - 350, 54, "Lives:  ");
-	lives_text = this.add.text(game_w/2 - 350+64, 54, "3");
-	this.add.text(game_w/2 - 350, 70, "Points:  ");
-	score_text = this.add.text(game_w/2 - 350+68, 70, "0");
+	 
+
+
 	
-    
+    this.add.text(600 , 54, "VIDAS:  ");
+	lives_text = this.add.text(660, 54, "3");
+	this.add.text(game_w/2 - 350, 54, "PUNTOS:  ");
+	score_text = this.add.text(game_w/2 - 350+68, 54, "0");
+	
     cursors = this.input.keyboard.createCursorKeys();
-
-    
-    
-
-    
 }
-
-
 
 function update (time, delta)
 {
+	let aliens = [alien,alien_2,alien_3];
     if (gameOver)
     {
         return;
@@ -123,32 +126,86 @@ function update (time, delta)
     if (cursors.up.isDown && player.y > game_h  - 560)
     {
         player.y -= 25;
-		laser.y -= 25;
-
-
     }
     else if (cursors.down.isDown && player.y < game_h  - 40)
     {
         player.y += 25;
-		laser.y += 25;
+		
     }
 
-	let speedBullet = 1;
+	let speedBullet = 100;
 
-	laser.x += speedBullet * delta;
+	
 
-	if(cursors.right.isDown){
-		laser.x = 20;
+	if(cursors.space.isDown){		
+
+		
+		if (numberOfLasers < 3){
+		
+			let laser = lasers.create(player.x+65,player.y,'Bullet');
+		
+			laser.setVelocity(200,0);
+			numberOfLasers++;
+		}
 	}
+
+      if (alien.x < 0){
+          alien.x = 1000;
+      }
+      else if(alien_2.x < 0){
+          alien_2.x = 2000;
+      }
+      else if(alien_3.x < 0){
+          alien_3.x = 2000;
+      }
+
 				
 	alien.x -= 5;
 	alien_2.x -= 5;
 	alien_3.x -= 5;
 
+	lasers.children.each(function (laser) {
+		if (laser.x > 800){
+			laser.destroy();
+			numberOfLasers--;
+		}
+	})
+
+	if(lives < 0){
+		lives = 3;
+		reset_enemies();
+		reset_player();
+
+   } 
+
+
+
+
+}
+
+function reset_enemies(){
+
+ 	alien.x = 890;
+ 	alien_2.x= 1850;
+    alien_3.x= 1350;
+}
+
+function reset_player(){
+ 	player.y = 60;
+	player.x 
+}
+
+function hitAlien(alienHitted,laser){
+	score ++;
+	alienHitted.x = 1000;
+	laser.destroy();
+	numberOfLasers--;
 	
-    
+	score_text.setText(score);
+}
 
-
+function destroyLaser(alienHitted, laser){
+	laser.disableBody(true,true);
 }
 
 
